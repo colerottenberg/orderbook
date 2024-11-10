@@ -1,3 +1,4 @@
+#[derive(Debug)]
 enum OrderType {
     Bid,
     Ask,
@@ -29,16 +30,16 @@ impl Default for Price {
 impl PartialOrd for Price {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         if self.integral < other.integral {
-            Some(std::cmp::Ordering::Less)
+            return Some(std::cmp::Ordering::Less);
         } else if self.integral > other.integral {
-            Some(std::cmp::Ordering::Greater)
+            return Some(std::cmp::Ordering::Greater);
         } else {
             if self.fractional < other.fractional {
-                Some(std::cmp::Ordering::Less)
+                return Some(std::cmp::Ordering::Less);
             } else if self.fractional > other.fractional {
-                Some(std::cmp::Ordering::Greater)
+                return Some(std::cmp::Ordering::Greater);
             } else {
-                Some(std::cmp::Ordering::Equal)
+                return Some(std::cmp::Ordering::Equal);
             }
         }
     }
@@ -58,6 +59,7 @@ impl Price {
     }
 }
 
+#[derive(Debug)]
 struct Limit {
     price: Price,
     orders: Vec<Order>,
@@ -70,8 +72,13 @@ impl Limit {
             orders: Vec::new(),
         }
     }
+
+    fn add(&mut self, order: Order) {
+        self.orders.push(order)
+    }
 }
 
+#[derive(Debug)]
 struct Order {
     size: f64,
     order_type: OrderType,
@@ -85,5 +92,9 @@ impl Order {
 
 fn main() {
     let price = Price::new(123.456);
-    println!("{:?}", price);
+    let mut limit = Limit::new(123.456);
+    let buy = Order::new(OrderType::Bid, 1.0);
+
+    limit.add(buy);
+    println!("{:?}", limit);
 }

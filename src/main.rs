@@ -24,15 +24,15 @@ fn main() {
     engine.add_orderbook(pair.clone(), order_book);
     println!("{:?}", engine);
 
-    let pair_string: String = pair.clone().into();
-    println!("Opening new market for {} trading pair", pair_string);
-
-    println!("Placing limit order for 100.0 BTC at $100.0");
-
     let order = Order::new(OrderType::Bid, 100.0);
 
-    match engine.place_limit_order(pair.clone(), 100.0, order) {
-        Ok(_) => println!("Order placed successfully"),
+    let eth_pair = TradingPair::new("ETH".to_string(), "USD".to_string());
+
+    match engine.place_limit_order(eth_pair.clone(), 100.0, order) {
+        Ok(_) => {
+            let pair_string: String = eth_pair.into();
+            println!("Order placed successfully for {}", pair_string);
+        }
         Err(e) => println!("Error placing order: {}", e),
     }
 }

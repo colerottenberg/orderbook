@@ -34,6 +34,28 @@ impl Engine {
         self.orderbooks.entry(trading_pair).or_insert(orderbook);
     }
 
+    /// Place a limit order
+    ///
+    /// This function will place a limit order on the orderbook
+    ///
+    /// # Arguments
+    /// * `trading_pair` - The trading pair to place the order on
+    /// * `price` - The price of the order
+    /// * `order` - The order to place
+    ///
+    /// # Returns
+    /// * `Result<(), String>` - Ok(()) if the order was placed successfully, Err(String) if the orderbook does not exist
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use matching::engine::Engine;
+    /// use matching::orderbook::{Order, OrderType};
+    /// let mut engine = Engine::new();
+    /// let order = Order::new(OrderType::Bid, 100.0);
+    /// engine.place_limit_order(TradingPair::new("BTC".to_string(), "USD".to_string()), 100.0, order);
+    ///
+    /// ```
     pub fn place_limit_order(
         &mut self,
         trading_pair: TradingPair,

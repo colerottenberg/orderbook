@@ -1,6 +1,6 @@
 mod matching;
 use matching::engine::Engine;
-use matching::orderbook::{Order, OrderBook, OrderType};
+use matching::orderbook::{Order, OrderBook, OrderType, TradingPair};
 
 fn main() {
     let buy_from_cole = Order::new(OrderType::Bid, 100.0);
@@ -19,4 +19,11 @@ fn main() {
     println!("{:?}", order_book);
 
     let mut engine = Engine::new();
+    let pair = TradingPair::new("BTC".to_string(), "USD".to_string());
+
+    engine.add_orderbook(pair.clone(), order_book);
+    println!("{:?}", engine);
+
+    let pair_string: String = pair.into();
+    println!("Opening new market for {} trading pair", pair_string);
 }

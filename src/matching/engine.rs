@@ -1,18 +1,7 @@
-use super::orderbook::OrderBook;
+use super::orderbook::{Order, OrderBook, Price, TradingPair};
 use std::collections::HashMap;
 
-#[derive(Debug, Hash, Eq, PartialEq)]
-struct TradingPair {
-    base: String,
-    quote: String,
-}
-
-impl TradingPair {
-    pub fn new(base: String, quote: String) -> Self {
-        TradingPair { base, quote }
-    }
-}
-
+#[derive(Debug)]
 pub struct Engine {
     orderbooks: HashMap<TradingPair, OrderBook>,
 }
@@ -43,5 +32,20 @@ impl Engine {
     /// ```
     pub fn add_orderbook(&mut self, trading_pair: TradingPair, orderbook: OrderBook) {
         self.orderbooks.entry(trading_pair).or_insert(orderbook);
+    }
+
+    pub fn place_limit_order(
+        &mut self,
+        trading_pair: TradingPair,
+        price: f64,
+        order: Order,
+    ) -> Result<(), String> {
+        match self.orderbooks.get_mut(&trading_pair) {
+            Some(orderbook) => {
+                orderbook.add(order, price);
+                Ok(())
+            }
+            None => Err("Orderbook does not exist".to_string()),
+        }
     }
 }

@@ -148,3 +148,30 @@ impl OrderBook {
         }
     }
 }
+
+#[derive(Debug, Hash, Eq, PartialEq, Clone)]
+pub struct TradingPair {
+    base: String,
+    quote: String,
+}
+
+impl TradingPair {
+    pub fn new(base: String, quote: String) -> Self {
+        TradingPair { base, quote }
+    }
+}
+
+impl From<(String, String)> for TradingPair {
+    fn from(pair: (String, String)) -> Self {
+        TradingPair {
+            base: pair.0,
+            quote: pair.1,
+        }
+    }
+}
+
+impl Into<String> for TradingPair {
+    fn into(self) -> String {
+        format!("{}/{}", self.base, self.quote)
+    }
+}

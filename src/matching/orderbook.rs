@@ -169,31 +169,27 @@ impl OrderBook {
     }
 
     pub fn place_market_order(&mut self, order: &mut Order) {
-        match order.order_type {
-            OrderType::Ask => {
-                for limit_order in self.ask_limits() {
-                    limit_order.fill(order);
-                    if order.is_filled() {
-                        break;
-                    }
-                }
-            }
-            OrderType::Bid => {
-                for limit_order in self.bid_limits() {
-                    limit_order.fill(order);
-                }
-            }
+        let limits = match order.order_type {
+            OrderType::Ask => self.bid_limits(), // If we are selling, we need the buyers
+            OrderType::Bid => self.ask_limits(), // Vice Versa
+        };
+        for limit_order in limits {
+            limit_order.fill(order);
         }
     }
 
-    /// TODO: Sorting
+    /// Returns the ask limits sorted by price of each limit
     pub fn ask_limits(&mut self) -> Vec<&mut Limit> {
-        self.asks.values_mut().collect::<Vec<&mut Limit>>()
+        let mut limits = self.asks.values_mut().collect::<Vec<&mut Limit>>();
+        limits.sort_by(|a, b| a.price.cmp(&b.price));
+        limits
     }
 
-    /// Collects the BTree of the Bids and collects it into a Vec
+    /// Collects the BTree of the Bids and collects it into a Vec and sorts by highest price
     pub fn bid_limits(&mut self) -> Vec<&mut Limit> {
-        self.bids.values_mut().collect::<Vec<&mut Limit>>()
+        let mut limits = self.bids.values_mut().collect::<Vec<&mut Limit>>();
+        limits.sort_by(|a, b| b.price.cmp(&a.price));
+        limits
     }
 
     /// Add an order to the order book
@@ -258,11 +254,12 @@ impl Into<String> for TradingPair {
 
 #[cfg(test)]
 pub mod tests {
+    use std::fmt::Debug;
+
     use super::*;
 
     #[test]
     fn limit_order_single_fill() {
-        let price = Price::new(1000.00);
         let mut limit = Limit::new(1000.00);
         let buy_limit_order = Order::new(OrderType::Bid, 100.0);
 
@@ -271,7 +268,7 @@ pub mod tests {
         let mut market_sell_order = Order::new(OrderType::Ask, 99.0);
         limit.fill(&mut market_sell_order);
         println!("{:?}", limit);
-        assert_eq!(market_sell_order.is_filled(), true);
+        assert!(market_sell_order.is_filled());
         assert_eq!(limit.orders.get(0).unwrap().size, 1.0);
     }
 
@@ -288,14 +285,13 @@ pub mod tests {
         let mut market_sell_order = Order::new(OrderType::Ask, 99.0);
         limit.fill(&mut market_sell_order);
         println!("{:?}", limit);
-        assert_eq!(market_sell_order.is_filled(), true);
-        assert_eq!(limit.orders.get(0).unwrap().is_filled(), true);
-        assert_eq!(limit.orders.get(1).unwrap().is_filled(), false)
+        assert!(market_sell_order.is_filled());
+        assert!(limit.orders.get(0).unwrap().is_filled());
+        assert!(!limit.orders.get(1).unwrap().is_filled())
     }
 
     #[test]
     fn limit_total_volume() {
-        let price = Price::new(1000.00);
         let mut limit = Limit::new(1000.00);
 
         let buy_limit_order_a = Order::new(OrderType::Bid, 50.0);
@@ -311,5 +307,30 @@ pub mod tests {
         limit.fill(&mut market_sell_order);
 
         assert_eq!(limit.volume(), 1.0);
+    }
+
+    #[test]
+    fn orderbook_fill_market_order() {
+        let mut orderbook = OrderBook::new();
+        orderbook.add(Order::new(OrderType::Ask, 10.0), 100.0);
+        orderbook.add(Order::new(OrderType::Ask, 5.0), 200.0);
+        orderbook.add(Order::new(OrderType::Ask, 15.0), 500.0);
+        orderbook.add(Order::new(OrderType::Ask, 10.0), 100.0);
+
+        let mut market = Order::new(OrderType::Bid, 10.0);
+        orderbook.place_market_order(&mut market);
+
+        let ask_limits = orderbook.ask_limits();
+        let matched_limits = ask_limits.get(0).unwrap();
+        assert_eq!(matched_limits.price, Price::from(100.0));
+        assert!(market.is_filled());
+
+        let matched_order = matched_limits.orders.get(0);
+        match matched_order {
+            Some(mo) => {
+                assert!(mo.is_filled())
+            }
+            None => eprintln!("Order No Longer Exists"),
+        }
     }
 }

@@ -2,3 +2,11 @@
 name = "orderbook"
 version = "0.1.0"
 edition = "2021"
+
+[dependencies]
+prost = "0.13.3"
+tokio = "1.41.1"
+tonic = "0.12.3"
+
+[build-dependencies]
+tonic-build = "0.12.3"

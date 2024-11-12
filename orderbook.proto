@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package orderbook;
+
+service OrderBookService {
+    rpc AddOrder (AddOrderRequest) returns (AddOrderResponse);
+    rpc GetSpread (GetSpreadRequest) returns (GetSpreadResponse);
+}
+
+message AddOrderRequest {
+    string trading_pair = 1;
+    string order_type = 2;
+    double size = 3;
+    double price = 4;
+}
+
+message AddOrderResponse {
+    string status = 1;
+}
+
+message GetSpreadRequest {
+    string trading_pair = 1;
+}
+
+message GetSpreadResponse {
+    double spread = 1;
+}

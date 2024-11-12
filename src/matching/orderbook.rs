@@ -154,6 +154,13 @@ pub struct OrderBook {
 }
 
 impl OrderBook {
+    /// Create a new order book
+    ///
+    /// # Example
+    /// ```
+    /// use matching::orderbook::OrderBook;
+    /// let order_book = OrderBook::new();
+    /// ```
     pub fn new() -> OrderBook {
         OrderBook {
             asks: BTreeMap::new(),
@@ -161,6 +168,47 @@ impl OrderBook {
         }
     }
 
+    pub fn place_market_order(&mut self, order: &mut Order) {
+        match order.order_type {
+            OrderType::Ask => {
+                for limit_order in self.ask_limits() {
+                    limit_order.fill(order);
+                    if order.is_filled() {
+                        break;
+                    }
+                }
+            }
+            OrderType::Bid => {
+                for limit_order in self.bid_limits() {
+                    limit_order.fill(order);
+                }
+            }
+        }
+    }
+
+    /// TODO: Sorting
+    pub fn ask_limits(&mut self) -> Vec<&mut Limit> {
+        self.asks.values_mut().collect::<Vec<&mut Limit>>()
+    }
+
+    /// Collects the BTree of the Bids and collects it into a Vec
+    pub fn bid_limits(&mut self) -> Vec<&mut Limit> {
+        self.bids.values_mut().collect::<Vec<&mut Limit>>()
+    }
+
+    /// Add an order to the order book
+    ///
+    /// # Arguments
+    /// * `order` - The order to add to the order book
+    /// * `price` - The price of the order
+    ///
+    /// # Example
+    /// ```
+    /// use matching::orderbook::{OrderBook, Order, OrderType};
+    /// let mut order_book = OrderBook::new();
+    /// let order = Order::new(OrderType::Bid, 100.0);
+    /// order_book.add(order, 1000.00);
+    /// ```
     pub fn add(&mut self, order: Order, price: f64) {
         match order.order_type {
             OrderType::Ask => {

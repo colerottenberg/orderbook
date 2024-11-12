@@ -192,6 +192,22 @@ impl OrderBook {
         limits
     }
 
+    pub fn spread(&self) -> Option<f64> {
+        let lowest_ask = match self.asks.keys().next() {
+            Some(ask) => ask,
+            None => return None,
+        };
+        let highest_bid = match self.bids.keys().next_back() {
+            Some(bid) => bid,
+            None => return None,
+        };
+
+        let hb: f64 = highest_bid.clone().into();
+        let la: f64 = lowest_ask.clone().into();
+
+        Some(hb - la)
+    }
+
     /// Add an order to the order book
     ///
     /// # Arguments
